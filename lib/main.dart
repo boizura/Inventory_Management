@@ -3,12 +3,11 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:inventory_management/models/item_models.dart';
 import 'package:inventory_management/firebase_services.dart';
+import 'package:inventory_management/item_form.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
@@ -20,9 +19,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Inventory Management',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: ThemeData(primarySwatch: Colors.blue),
       home: const HomePage(),
     );
   }
@@ -36,14 +33,12 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final FirestoreService service = FirestoreService(); 
+  final FirestoreService service = FirestoreService();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Inventory Management'),
-      ),
+      appBar: AppBar(title: const Text('Inventory Management')),
       body: StreamBuilder<List<Item>>(
         stream: service.streamItems(),
         builder: (context, snapshot) {
@@ -68,22 +63,25 @@ class _HomePageState extends State<HomePage> {
 
               return ListTile(
                 title: Text(item.name),
-                subtitle: Text(
-                  "Qty: ${item.quantity} | \$${item.price}",
-                ),
+                subtitle: Text("Qty: ${item.quantity} | \$${item.price}"),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
                       icon: const Icon(Icons.edit),
                       onPressed: () {
-                        // TODO: edit item
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete),
-                      onPressed: () {
-                        service.deleteItem(item.id);
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          builder: (_) {
+                            return ItemForm(
+                              item: item, 
+                              onSubmit: (updatedItem) {
+                                service.updateItem(updatedItem);
+                              },
+                            );
+                          },
+                        );
                       },
                     ),
                   ],
@@ -96,7 +94,17 @@ class _HomePageState extends State<HomePage> {
 
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: open add item form
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            builder: (_) {
+              return ItemForm(
+                onSubmit: (item) {
+                  service.addItem(item);
+                },
+              );
+            },
+          );
         },
         child: const Icon(Icons.add),
       ),
