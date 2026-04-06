@@ -11,22 +11,47 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  ThemeMode _themeMode = ThemeMode.light;
+
+  void _toggleThemeMode() {
+    setState(() {
+      _themeMode = _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Inventory Management',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: const HomePage(),
+      theme: ThemeData(primarySwatch: Colors.blue, brightness: Brightness.light),
+      darkTheme: ThemeData.dark().copyWith(
+        colorScheme: ThemeData.dark().colorScheme.copyWith(primary: Colors.blue),
+        appBarTheme: const AppBarTheme(backgroundColor: Colors.blueGrey),
+        floatingActionButtonTheme: const FloatingActionButtonThemeData(backgroundColor: Colors.blue),
+      ),
+      themeMode: _themeMode,
+      home: HomePage(
+        themeMode: _themeMode,
+        onToggleTheme: _toggleThemeMode,
+      ),
     );
   }
 }
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  final ThemeMode themeMode;
+  final VoidCallback onToggleTheme;
+
+  const HomePage({Key? key, required this.themeMode, required this.onToggleTheme}) : super(key: key);
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -47,7 +72,20 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Inventory Management')),
+      appBar: AppBar(
+        title: const Text('Inventory Management'),
+        actions: [
+          IconButton(
+            icon: Icon(widget.themeMode == ThemeMode.dark
+                ? Icons.wb_sunny
+                : Icons.nights_stay),
+            onPressed: widget.onToggleTheme,
+            tooltip: widget.themeMode == ThemeMode.dark
+                ? 'Switch to light mode'
+                : 'Switch to dark mode',
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Padding(
